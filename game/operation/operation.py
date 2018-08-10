@@ -66,6 +66,10 @@ class Operation:
             options_dict = loads(f.read())["options"]
 
         self.mission = dcs.Mission(terrain)
+        self.mission.set_sortie_text("DCS Liberation : ")
+        self.mission.add_picture_red("resources/ui/briefing_red.png")
+        self.mission.add_picture_blue("resources/ui/briefing_blue.png")
+
         self.mission.options.load_from_dict(options_dict)
         self.is_quick = is_quick
 
