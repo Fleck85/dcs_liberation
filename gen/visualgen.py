@@ -110,7 +110,7 @@ class VisualGenerator:
                         if not self.game.theater.is_on_land(pos):
                             break
 
-                        if self.game.theater.is_on_lake(position):
+                        if self.game.theater.is_on_lake(pos):
                             break
 
                         self.mission.static_group(
