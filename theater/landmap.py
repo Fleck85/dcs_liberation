@@ -1,3 +1,4 @@
+import logging
 import pickle
 
 
@@ -6,6 +7,7 @@ def load_poly(filename: str):
         with open(filename, "rb") as f:
             return pickle.load(f)
     except:
+        logging.info("Error loading poly")
         return None
 
 

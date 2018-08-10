@@ -31,19 +31,19 @@ class ArmorConflictGenerator:
                 int(self.conflict.size * SPREAD_DISTANCE_FACTOR[0]),
                 int(self.conflict.size * SPREAD_DISTANCE_FACTOR[1]),
                 )
-
         return point.random_point_within(distance, self.conflict.size * SPREAD_DISTANCE_SIZE_FACTOR)
 
     def _generate_group(self, side: Country, unit: VehicleType, count: int, at: Point, to: Point = None):
+
         for c in range(count):
             logging.info("armorgen: {} for {}".format(unit, side.id))
             group = self.m.vehicle_group(
-                    side,
-                    namegen.next_unit_name(side, unit),
-                    unit,
-                    position=self._group_point(at),
-                    group_size=1,
-                    move_formation=PointAction.OffRoad)
+                side,
+                namegen.next_unit_name(side, unit),
+                unit,
+                position=self._group_point(at),
+                group_size=1,
+                move_formation=PointAction.OffRoad)
 
             if not to:
                 to = self.conflict.position.point_from_heading(0, 500)
@@ -52,10 +52,13 @@ class ArmorConflictGenerator:
             wayp.tasks = []
 
     def _generate_fight_at(self, attackers: db.ArmorDict, defenders: db.ArmorDict, position: Point):
+        logging.info("armorgen: generate fight")
+
         if attackers:
             attack_pos = position.point_from_heading(self.conflict.heading - 90, 8000)
             attack_dest = position.point_from_heading(self.conflict.heading + 90, 25000)
             for type, count in attackers.items():
+                logging.info("armorgen: attackers {} {}".format(type, count))
                 self._generate_group(
                     side=self.conflict.attackers_side,
                     unit=type,
@@ -68,6 +71,7 @@ class ArmorConflictGenerator:
             def_pos = position.point_from_heading(self.conflict.heading + 90, 4000)
             def_dest = position.point_from_heading(self.conflict.heading - 90, 25000)
             for type, count in defenders.items():
+                logging.info("armorgen: defenders {} {}".format(type, count))
                 self._generate_group(
                     side=self.conflict.defenders_side,
                     unit=type,
@@ -77,7 +81,12 @@ class ArmorConflictGenerator:
                 )
 
     def generate(self, attackers: db.ArmorDict, defenders: db.ArmorDict):
+
+        logging.info("armorgen::generate")
+
         for type, count in attackers.items():
+
+            logging.info("armorgen: attackers {} {}".format(type, count))
             self._generate_group(
                 side=self.conflict.attackers_side,
                 unit=type,
@@ -85,6 +94,7 @@ class ArmorConflictGenerator:
                 at=self.conflict.ground_attackers_location)
 
         for type, count in defenders.items():
+            logging.info("armorgen: defenders {} {}".format(type, count))
             self._generate_group(
                 side=self.conflict.defenders_side,
                 unit=type,
@@ -100,9 +110,24 @@ class ArmorConflictGenerator:
         attacker_groups = list(db.unitdict_split(attackers, single_fight_attackers_count))
 
         for attacker_group_dict, target_group_dict in zip_longest(attacker_groups, defender_groups):
-            position = self.conflict.position.point_from_heading(self.conflict.heading,
+
+            valid_fight_position_found = False
+            search = 0
+
+            while search < 10 and not valid_fight_position_found:
+                position = self.conflict.position.point_from_heading(self.conflict.heading,
                                                                  random.randint(FRONTLINE_CAS_PADDING, int(self.conflict.distance - FRONTLINE_CAS_PADDING)))
-            self._generate_fight_at(attacker_group_dict, target_group_dict, position)
+                att_pos = position.point_from_heading(self.conflict.heading - 90, 8000)
+                def_pos = position.point_from_heading(self.conflict.heading + 90, 4000)
+
+                valid_fight_position_found = not(self.conflict.theater.is_on_lake(att_pos))\
+                                             and not(self.conflict.theater.is_on_lake(def_pos))
+
+                logging.info(valid_fight_position_found)
+                search += 1
+
+            if valid_fight_position_found:
+                self._generate_fight_at(attacker_group_dict, target_group_dict, position)
 
     def generate_passengers(self, count: int):
         unit_type = random.choice(db.find_unittype(Nothing, self.conflict.attackers_side.name))

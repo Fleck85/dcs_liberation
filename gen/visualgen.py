@@ -110,6 +110,9 @@ class VisualGenerator:
                         if not self.game.theater.is_on_land(pos):
                             break
 
+                        if self.game.theater.is_on_lake(position):
+                            break
+
                         self.mission.static_group(
                             self.mission.country(self.game.enemy),
                             "",
@@ -124,6 +127,9 @@ class VisualGenerator:
                 if random.randint(0, 100) <= k:
                     position = target.position.random_point_within(0, spread)
                     if not self.game.theater.is_on_land(position):
+                        break
+
+                    if self.game.theater.is_on_lake(position):
                         break
 
                     self.mission.static_group(

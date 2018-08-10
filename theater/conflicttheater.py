@@ -51,6 +51,7 @@ class ConflictTheater:
     reference_points = None  # type: typing.Dict
     overview_image = None  # type: str
     landmap_poly = None
+    lakemap_polys = None
     daytime_map = None  # type: typing.Dict[str, typing.Tuple[int, int]]
 
     def __init__(self):
@@ -68,6 +69,16 @@ class ConflictTheater:
 
         for poly in self.landmap_poly:
             if ray_tracing(point.x, point.y, poly):
+                return True
+
+        return False
+
+    def is_on_lake(self, point: Point) -> bool:
+        if not self.lakemap_polys:
+            return False
+
+        for lake in self.lakemap_polys:
+            if ray_tracing(point.x, point.y, lake):
                 return True
 
         return False

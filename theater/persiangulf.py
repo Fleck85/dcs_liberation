@@ -11,7 +11,10 @@ class PersianGulfTheater(ConflictTheater):
     overview_image = "persiangulf.gif"
     reference_points = {(persiangulf.Sir_Abu_Nuayr.position.x, persiangulf.Sir_Abu_Nuayr.position.y): (321, 145),
                         (persiangulf.Sirri_Island.position.x, persiangulf.Sirri_Island.position.y): (347, 82), }
+
     landmap_poly = load_poly("resources\\gulflandmap.p")
+    lakemap_polys = []
+
     daytime_map = {
         "dawn": (6, 8),
         "day": (8, 16),
