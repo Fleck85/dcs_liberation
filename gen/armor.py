@@ -45,6 +45,9 @@ class ArmorConflictGenerator:
                 group_size=1,
                 move_formation=PointAction.OffRoad)
 
+            vehicle: Vehicle = group.units[0]
+            vehicle.player_can_drive = True
+
             if not to:
                 to = self.conflict.position.point_from_heading(0, 500)
 
@@ -123,7 +126,6 @@ class ArmorConflictGenerator:
                 valid_fight_position_found = not(self.conflict.theater.is_on_lake(att_pos))\
                                              and not(self.conflict.theater.is_on_lake(def_pos))
 
-                logging.info(valid_fight_position_found)
                 search += 1
 
             if valid_fight_position_found:

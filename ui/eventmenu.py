@@ -23,6 +23,7 @@ class EventMenu(Menu):
     aircraft_scramble_entries = None  # type: typing.Dict[PlaneType , Entry]
     aircraft_client_entries = None  # type: typing.Dict[PlaneType, Entry]
     armor_scramble_entries = None  # type: typing.Dict[VehicleType, Entry]
+    ca_slot_entry = None
     awacs = None  # type: IntVar
 
     def __init__(self, window: Window, parent, game: Game, event: event.Event):
@@ -130,11 +131,19 @@ class EventMenu(Menu):
         if not self.base.total_armor or armor_counter == 0:
             label("None", sticky=W)
 
-        header("Support :")
+        header("Misc :")
+
         # Options
         awacs_enabled = self.game.budget >= AWACS_BUDGET_COST and NORMAL or DISABLED
-        Checkbutton(self.frame, var=self.awacs, state=awacs_enabled,  **STYLES["radiobutton"]).grid(row=row, column=0, sticky=E)
-        Label(self.frame, text="AWACS ({}m)".format(AWACS_BUDGET_COST), **STYLES["widget"]).grid(row=row, column=3, sticky=W, padx=5, pady=5)
+        Label(self.frame, text="AWACS ({}m)".format(AWACS_BUDGET_COST), **STYLES["widget"]).grid(row=row, column=0, sticky=W)
+        Checkbutton(self.frame, var=self.awacs, state=awacs_enabled,  **STYLES["radiobutton"]).grid(row=row, column=3, sticky=E)
+        row += 1
+
+        Label(self.frame, text="Combined Arms Slots", **STYLES["widget"]).grid(row=row, sticky=W)
+        self.ca_slot_entry = Entry(self.frame,  width=2)
+        self.ca_slot_entry.insert(0, "0")
+        self.ca_slot_entry.grid(column=2, row=row, sticky=E, padx=5)
+        Button(self.frame, text="+", command=self.add_ca_slot, **STYLES["btn-primary"]).grid(column=3, row=row, padx=15)
         row += 1
 
         header("Ready ?")
@@ -171,6 +180,12 @@ class EventMenu(Menu):
 
         return action
 
+    def add_ca_slot(self):
+        value = self.ca_slot_entry.get()
+        amount = int(value and value or "0")
+        self.ca_slot_entry.delete(0, END)
+        self.ca_slot_entry.insert(0, str(amount+1))
+
     def client_one(self, unit_type: UnitType) -> typing.Callable:
         def action():
             entry = self.aircraft_client_entries[unit_type]  # type: Entry
@@ -181,11 +196,18 @@ class EventMenu(Menu):
         return action
 
     def start(self):
+
+        # Set Awacs value
         if self.awacs.get() == 1:
             self.event.is_awacs_enabled = True
             self.game.awacs_expense_commit()
         else:
             self.event.is_awacs_enabled = False
+
+        # Set Combined Arms slot count
+        ca_slot_entry_value = self.ca_slot_entry.get()
+        ca_slots = int(ca_slot_entry_value and ca_slot_entry_value or "0")
+        self.event.ca_slots = ca_slots
 
         scrambled_aircraft = {}
         scrambled_sweep = {}

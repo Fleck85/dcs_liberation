@@ -26,6 +26,7 @@ class Operation:
     trigger_radius = TRIGGER_RADIUS_MEDIUM
     is_quick = None
     is_awacs_enabled = False
+    ca_slots = 0
 
     def __init__(self,
                  game,
@@ -47,7 +48,6 @@ class Operation:
     def initialize(self, mission: Mission, conflict: Conflict):
         self.mission = mission
         self.conflict = conflict
-
         self.armorgen = ArmorConflictGenerator(mission, conflict)
         self.airgen = AircraftConflictGenerator(mission, conflict, self.game.settings)
         self.aagen = AAConflictGenerator(mission, conflict)
@@ -69,6 +69,10 @@ class Operation:
         self.mission.set_sortie_text("DCS Liberation : ")
         self.mission.add_picture_red("resources/ui/briefing_red.png")
         self.mission.add_picture_blue("resources/ui/briefing_blue.png")
+
+        self.mission.groundControl.pilot_can_control_vehicles = self.ca_slots > 0
+        self.mission.groundControl.blue_tactical_commander = self.ca_slots
+        self.mission.groundControl.red_tactical_commander = self.ca_slots
 
         self.mission.options.load_from_dict(options_dict)
         self.is_quick = is_quick
