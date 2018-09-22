@@ -23,6 +23,10 @@ class NameGenerator:
         self.number += 1
         return "carrier|{}|{}|0|".format(country.id, self.number)
 
+    def next_ignorable_unit_name(self, country):
+        self.number += 1
+        return "unit|{}|{}|{}|".format(country.id, self.number, "Ignore")
+
 
 namegen = NameGenerator()
 

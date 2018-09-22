@@ -22,7 +22,7 @@ class Window:
 
         self.frame.grid_columnconfigure(0, weight=0)
         self.frame.grid_columnconfigure(1, weight=1)
-        self.frame.grid_rowconfigure(0, weight=1)
+        self.frame.grid_rowconfigure(0, weight=0)
 
         self.left_pane = Frame(self.frame, bg=BG_TITLE_COLOR)
         self.left_pane.grid(row=0, column=0, sticky=NSEW)

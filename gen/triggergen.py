@@ -147,7 +147,8 @@ class TriggersGenerator:
         self._set_allegiances(player_coalition, enemy_coalition)
 
         description = ""
-        description += "FREQUENCIES:"
+        description += "FREQUENCIES:\n"
+        description += "----------------------\n"
         description += "\nFlight: 251 MHz AM"
         description += "\nTanker: 10X/240 MHz"
 

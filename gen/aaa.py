@@ -51,6 +51,8 @@ class ExtraAAConflictGenerator:
     def generate(self):
         from theater.conflicttheater import ControlPoint
 
+        logging.info("EXTRA AA GEN")
+
         for cp in self.game.theater.controlpoints:
             if cp.is_global:
                 continue

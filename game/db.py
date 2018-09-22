@@ -90,16 +90,22 @@ PRICES = {
 
     Armor.ATGM_M1134_Stryker: 6,
     Armor.APC_BTR_80: 6,
+    Armor.APC_M1043_HMMWV_Armament: 3,
 
     Unarmed.Transport_UAZ_469: 3,
     Unarmed.Transport_Ural_375: 3,
-    Infantry.Infantry_M4: 1,
-    Infantry.Soldier_AK: 1,
+
+    Infantry.Infantry_M4: 0.02,
+    Infantry.Soldier_AK: 0.01,
+    Infantry.Soldier_M249: 0.03,
+    Infantry.Paratrooper_AKS: 0.03,
+    Infantry.Paratrooper_RPG_16: 0.04,
 
     Unarmed.Transport_M818: 3,
 
     AirDefence.AAA_Vulcan_M163: 5,
     AirDefence.SAM_Avenger_M1097: 10,
+    AirDefence.SAM_Linebacker_M6: 12,
     AirDefence.SAM_Patriot_ICC: 15,
 
     AirDefence.AAA_ZU_23_on_Ural_375: 5,
@@ -177,7 +183,9 @@ UNIT_BY_TASK = {
 
     AWACS: [E_3A, A_50, ],
 
-    PinpointStrike: [Armor.MBT_T_90, Armor.MBT_T_80U, Armor.MBT_T_55, Armor.MBT_M1A2_Abrams, Armor.MBT_M60A3_Patton, Armor.ATGM_M1134_Stryker, Armor.APC_BTR_80, ],
+    PinpointStrike: [Armor.MBT_T_90, Armor.MBT_T_80U, Armor.MBT_T_55, Armor.MBT_M1A2_Abrams,
+                     Armor.MBT_M60A3_Patton, Armor.ATGM_M1134_Stryker, Armor.APC_BTR_80,
+                     Armor.APC_M1043_HMMWV_Armament, AirDefence.SAM_Linebacker_M6],
     AirDefence: [
         # those are listed multiple times here to balance prioritization more into lower tier AAs
         AirDefence.AAA_Vulcan_M163,
@@ -196,7 +204,7 @@ UNIT_BY_TASK = {
     ],
 
     Reconnaissance: [Unarmed.Transport_M818, Unarmed.Transport_Ural_375, Unarmed.Transport_UAZ_469],
-    Nothing: [Infantry.Infantry_M4, Infantry.Soldier_AK, ],
+    Nothing: [Infantry.Infantry_M4, Infantry.Soldier_AK, Infantry.Soldier_M249, Infantry.Paratrooper_AKS, Infantry.Paratrooper_RPG_16],
     Embarking: [UH_1H, Mi_8MT, ],
 
     Carriage: [CVN_74_John_C__Stennis, CV_1143_5_Admiral_Kuznetsov, ],
@@ -281,7 +289,11 @@ UNIT_BY_COUNTRY = {
         Armor.MBT_T_55,
         Unarmed.Transport_Ural_375,
         Unarmed.Transport_UAZ_469,
+
         Infantry.Soldier_AK,
+        Infantry.Paratrooper_RPG_16,
+        Infantry.Paratrooper_AKS,
+
         CV_1143_5_Admiral_Kuznetsov,
         Bulk_cargo_ship_Yakushev,
         Dry_cargo_ship_Ivanov,
@@ -313,8 +325,11 @@ UNIT_BY_COUNTRY = {
         Armor.MBT_M1A2_Abrams,
         Armor.MBT_M60A3_Patton,
         Armor.ATGM_M1134_Stryker,
+        Armor.APC_M1043_HMMWV_Armament,
         Unarmed.Transport_M818,
         Infantry.Infantry_M4,
+        Infantry.Soldier_M249,
+        AirDefence.SAM_Linebacker_M6,
 
         AirDefence.AAA_Vulcan_M163,
         AirDefence.SAM_Avenger_M1097,
@@ -372,6 +387,10 @@ PLANE_PAYLOAD_OVERRIDES = {
 
     MiG_21Bis: {
         "*": "Patrol, medium range",
+    },
+
+    Su_25T : {
+        "*": "KH-29T*2, VIKHR*2, ECM"
     }
 }
 
