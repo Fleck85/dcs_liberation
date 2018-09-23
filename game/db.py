@@ -101,10 +101,12 @@ PRICES = {
 
     AirDefence.AAA_Vulcan_M163: 5,
     AirDefence.SAM_Linebacker_M6: 10,
+    AirDefence.SAM_Hawk_PCP: 35,
 
     AirDefence.SPAAA_ZSU_23_4_Shilka: 8,
     AirDefence.SAM_SA_9_Strela_1_9P31: 13,
     AirDefence.SAM_SA_8_Osa_9A33: 18,
+    AirDefence.SAM_SA_3_S_125_LN_5P73: 25,
 
     # ship
     CV_1143_5_Admiral_Kuznetsov: 100,
@@ -115,6 +117,38 @@ PRICES = {
     Dry_cargo_ship_Ivanov: 10,
     Tanker_Elnya_160: 10,
 }
+
+"""
+SAM groups definition.
+
+Some SAM systems needs to be spawned as a group to be functionnal.
+This dictionnary defines the groups of units required to generate a functionning SAM site.
+The first unit of the group is the one that needs to be destroyed to have the site considered destroyed by the debriefing parser.
+"""
+SAM_GROUPS = {
+
+    # Hawk SAM site
+    # 1 Command Center (PCP), 2 Launcher (LN-M192), 2 search radar (MPQ 50 (high alt) & AN-MPQ-55 (low alt)),
+    # 1 track radar (AN-MPQ-46), 1 ammo truck, 1 HMMV, 5 guys with M4
+    AirDefence.SAM_Hawk_PCP: [
+        AirDefence.SAM_Hawk_PCP, AirDefence.SAM_Hawk_LN_M192, AirDefence.SAM_Hawk_LN_M192,
+        AirDefence.SAM_Hawk_SR_AN_MPQ_50, AirDefence.SAM_Hawk_CWAR_AN_MPQ_55, AirDefence.SAM_Hawk_TR_AN_MPQ_46,
+        Armor.APC_M1043_HMMWV_Armament, Unarmed.HEMTT_TFFT, Unarmed.HEMTT_TFFT,
+        Infantry.Infantry_M4, Infantry.Infantry_M4, Infantry.Infantry_M4, Infantry.Infantry_M4, Infantry.Infantry_M4
+    ],
+
+    # SA-3/S-125 site
+    # 2 launcher, 1 search radar (SR-P-19), 1 track radar (TR-SNR), 2 ammo truck, 5 guys with AK
+    AirDefence.SAM_SA_3_S_125_LN_5P73: [
+        AirDefence.SAM_SA_3_S_125_SR_P_19, AirDefence.SAM_SA_3_S_125_TR_SNR,
+        AirDefence.SAM_SA_3_S_125_LN_5P73, AirDefence.SAM_SA_3_S_125_LN_5P73,
+        Unarmed.Transport_KAMAZ_43101, Unarmed.Transport_KAMAZ_43101,
+        Infantry.Soldier_AK, Infantry.Soldier_AK, Infantry.Soldier_AK,
+        Infantry.Soldier_AK, Infantry.Soldier_AK
+    ],
+
+}
+
 
 """
 Units separated by tasks. This will include units for both countries. Be advised that unit could only belong to single task!
@@ -183,6 +217,7 @@ UNIT_BY_TASK = {
         AirDefence.AAA_Vulcan_M163,
         AirDefence.AAA_Vulcan_M163,
         AirDefence.SAM_Linebacker_M6,
+        AirDefence.SAM_Hawk_PCP,
 
         AirDefence.SPAAA_ZSU_23_4_Shilka,
         AirDefence.SPAAA_ZSU_23_4_Shilka,
@@ -190,6 +225,7 @@ UNIT_BY_TASK = {
         AirDefence.SAM_SA_9_Strela_1_9P31,
         AirDefence.SAM_SA_9_Strela_1_9P31,
         AirDefence.SAM_SA_8_Osa_9A33,
+        AirDefence.SAM_SA_3_S_125_LN_5P73,
     ],
 
     Reconnaissance: [Unarmed.Transport_M818, Unarmed.Transport_Ural_375, Unarmed.Transport_UAZ_469],
@@ -205,9 +241,11 @@ Units from AirDefense category of UNIT_BY_TASK that will be removed from use if 
 """
 SAM_BAN = [
     AirDefence.SAM_Linebacker_M6,
+    AirDefence.SAM_Hawk_PCP,
 
     AirDefence.SAM_SA_9_Strela_1_9P31,
     AirDefence.SAM_SA_8_Osa_9A33,
+    AirDefence.SAM_SA_3_S_125_LN_5P73
 ]
 
 """
@@ -269,6 +307,7 @@ UNIT_BY_COUNTRY = {
         AirDefence.SPAAA_ZSU_23_4_Shilka,
         AirDefence.SAM_SA_9_Strela_1_9P31,
         AirDefence.SAM_SA_8_Osa_9A33,
+        AirDefence.SAM_SA_3_S_125_LN_5P73,
 
         Armor.APC_BTR_80,
         Armor.MBT_T_90,
@@ -313,6 +352,7 @@ UNIT_BY_COUNTRY = {
 
         AirDefence.AAA_Vulcan_M163,
         AirDefence.SAM_Linebacker_M6,
+        AirDefence.SAM_Hawk_PCP,
 
         CVN_74_John_C__Stennis,
         LHA_1_Tarawa,
