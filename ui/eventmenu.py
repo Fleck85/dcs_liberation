@@ -9,7 +9,7 @@ from .styles import STYLES, RED
 
 class EventMenu(Menu):
     scramble_entries = None  # type: typing.Dict[typing.Type[Task], typing.Dict[typing.Type[UnitType], typing.Tuple[Entry, Entry]]]
-    ca_slot_entry = None
+    ca_slot_entry = None  # type: Entry
     error_label = None  # type: Label
     awacs = None  # type: IntVar
 
@@ -69,15 +69,11 @@ class EventMenu(Menu):
 
             row += 1
 
-        threat_descr = self.event.threat_description
-        if threat_descr:
-            threat_descr = "Approx. {}".format(threat_descr)
-
         # Header
         header("Mission Menu", "title")
 
         # Mission Description
-        Label(self.frame, text="{}. {}".format(self.event, threat_descr), **STYLES["mission-preview"]).grid(row=row, column=0, columnspan=5, sticky=S+EW, padx=5, pady=5)
+        Label(self.frame, text="{}".format(self.event), **STYLES["mission-preview"]).grid(row=row, column=0, columnspan=5, sticky=S+EW, padx=5, pady=5)
         row += 1
 
         Label(self.frame, text="Amount", **STYLES["widget"]).grid(row=row, column=1, columnspan=2)
@@ -100,15 +96,15 @@ class EventMenu(Menu):
         header("Support:")
         # Options
         awacs_enabled = self.game.budget >= AWACS_BUDGET_COST and NORMAL or DISABLED
-        Checkbutton(self.frame, var=self.awacs, state=awacs_enabled,  **STYLES["radiobutton"]).grid(row=row, column=2, sticky=E)
         Label(self.frame, text="AWACS ({}m)".format(AWACS_BUDGET_COST), **STYLES["widget"]).grid(row=row, column=0, sticky=W, pady=5)
+        Checkbutton(self.frame, var=self.awacs, state=awacs_enabled,  **STYLES["radiobutton"]).grid(row=row, column=4, sticky=E)
         row += 1
 
         Label(self.frame, text="Combined Arms Slots", **STYLES["widget"]).grid(row=row, sticky=W)
         self.ca_slot_entry = Entry(self.frame,  width=2)
         self.ca_slot_entry.insert(0, "0")
-        self.ca_slot_entry.grid(column=1, row=row, sticky=W, padx=5)
-        Button(self.frame, text="+", command=self.add_ca_slot, **STYLES["btn-primary"]).grid(column=2, row=row, padx=5, sticky=W)
+        self.ca_slot_entry.grid(column=3, row=row, sticky=E, padx=5)
+        Button(self.frame, text="+", command=self.add_ca_slot, **STYLES["btn-primary"]).grid(column=4, row=row, padx=5, sticky=W)
         row += 1
 
         header("Ready?")
@@ -154,7 +150,10 @@ class EventMenu(Menu):
             self.event.is_awacs_enabled = False
 
         ca_slot_entry_value = self.ca_slot_entry.get()
-        ca_slots = int(ca_slot_entry_value and ca_slot_entry_value or "0")
+        try:
+            ca_slots = int(ca_slot_entry_value and ca_slot_entry_value or "0")
+        except:
+            ca_slots = 0
         self.event.ca_slots = ca_slots
 
         flights = {k: {} for k in self.event.tasks}  # type: db.TaskForceDict

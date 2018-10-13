@@ -4,6 +4,8 @@ from userdata.debriefing import *
 
 from gen import *
 
+TANKER_CALLSIGNS = ["Texaco", "Arco", "Shell"]
+
 
 class Operation:
     attackers_starting_position = None  # type: db.StartingPosition
@@ -86,13 +88,15 @@ class Operation:
 
         # air support
         self.airsupportgen.generate(self.is_awacs_enabled)
-        self.briefinggen.append_frequency("Tanker", "10X/131 MHz AM")
+        for i, tanker_type in enumerate(self.airsupportgen.generated_tankers):
+            self.briefinggen.append_frequency("Tanker {} ({})".format(TANKER_CALLSIGNS[i], tanker_type), "{}X/{} MHz AM".format(97+i, 130+i))
+
         if self.is_awacs_enabled:
             self.briefinggen.append_frequency("AWACS", "133 MHz AM")
 
         # combined arms
         self.mission.groundControl.pilot_can_control_vehicles = self.ca_slots > 0
-        if self.game.player == "USA":
+        if self.game.player in [country.name for country in self.mission.coalition["blue"].countries.values()]:
             self.mission.groundControl.blue_tactical_commander = self.ca_slots
         else:
             self.mission.groundControl.red_tactical_commander = self.ca_slots

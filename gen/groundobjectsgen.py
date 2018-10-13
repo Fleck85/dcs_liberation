@@ -8,6 +8,7 @@ from dcs.mission import *
 from dcs.statics import *
 
 FARP_FRONTLINE_DISTANCE = 10000
+AA_CP_MIN_DISTANCE = 40000
 
 
 class GroundObjectsGenerator:
@@ -19,11 +20,15 @@ class GroundObjectsGenerator:
         self.game = game
 
     def generate_farps(self, number_of_units=1) -> typing.Collection[StaticGroup]:
-        assert self.conflict.is_vector, "FARP could be generated only on frontline conflicts!"
-
-        for i, _ in enumerate(range(0, number_of_units, self.FARP_CAPACITY)):
+        if self.conflict.is_vector:
+            center = self.conflict.center
             heading = self.conflict.heading - 90
-            position = self.conflict.find_ground_position(self.conflict.center.point_from_heading(heading, FARP_FRONTLINE_DISTANCE), heading)
+        else:
+            center, heading = self.conflict.frontline_position(self.conflict.theater, self.conflict.from_cp, self.conflict.to_cp)
+            heading -= 90
+
+        position = self.conflict.find_ground_position(center.point_from_heading(heading, FARP_FRONTLINE_DISTANCE), heading)
+        for i, _ in enumerate(range(0, number_of_units, self.FARP_CAPACITY)):
             position = position.point_from_heading(0, i * 275)
 
             yield self.m.farp(
@@ -43,6 +48,9 @@ class GroundObjectsGenerator:
 
         for ground_object in cp.ground_objects:
             if ground_object.dcs_identifier == "AA":
+                if ground_object.position.distance_to_point(self.conflict.from_cp.position) < AA_CP_MIN_DISTANCE:
+                    continue
+
                 if ground_object.is_dead:
                     continue
 
@@ -64,6 +72,10 @@ class GroundObjectsGenerator:
                 else:
                     static_type = fortification_map[ground_object.dcs_identifier]
 
+                if not static_type:
+                    print("Didn't find {} in static _map(s)!".format(ground_object.dcs_identifier))
+                    continue
+
                 group = self.m.static_group(
                     country=side,
                     name=ground_object.string_identifier,
@@ -73,4 +85,4 @@ class GroundObjectsGenerator:
                     dead=ground_object.is_dead,
                 )
 
-                logging.info("generated object identifier {} with mission id {}".format(group.name, group.id))
+                logging.info("generated {}object identifier {} with mission id {}".format("dead " if ground_object.is_dead else "", group.name, group.id))

@@ -12,16 +12,18 @@ from dcs.action import *
 
 from game import db
 from theater import *
+from gen.airsupportgen import AirSupportConflictGenerator
 from gen import *
 
 PUSH_TRIGGER_SIZE = 3000
+PUSH_TRIGGER_ACTIVATION_AGL = 100
 
 REGROUP_ZONE_DISTANCE = 12000
 REGROUP_ALT = 5000
 
 TRIGGER_WAYPOINT_OFFSET = 2
 TRIGGER_MIN_DISTANCE_FROM_START = 10000
-TRIGGER_RADIUS_MINIMUM = 25000
+TRIGGER_RADIUS_MINIMUM = 20000
 
 TRIGGER_RADIUS_SMALL = 30000
 TRIGGER_RADIUS_MEDIUM = 100000
@@ -79,40 +81,41 @@ class TriggersGenerator:
                         if player_cp.position.distance_to_point(group.position) > PUSH_TRIGGER_SIZE * 3:
                             continue
 
-                        if group.units[0].is_human():
-                            continue
-
-                        regroup_heading = self.conflict.to_cp.position.heading_between_point(player_cp.position)
-
-                        pos1 = group.position.point_from_heading(regroup_heading, REGROUP_ZONE_DISTANCE)
-                        pos2 = group.position.point_from_heading(regroup_heading, REGROUP_ZONE_DISTANCE+5000)
-                        w1 = group.add_waypoint(pos1, REGROUP_ALT)
-                        w2 = group.add_waypoint(pos2, REGROUP_ALT)
-
-                        group.points.remove(w1)
-                        group.points.remove(w2)
-
-                        group.points.insert(1, w2)
-                        group.points.insert(1, w1)
-
-                        w1.tasks.append(Silence(True))
-
-                        switch_waypoint_task = ControlledTask(SwitchWaypoint(from_waypoint=3, to_waypoint=2))
-                        switch_waypoint_task.start_if_user_flag(1, False)
-                        w2.tasks.append(switch_waypoint_task)
-                        group.points[3].tasks.append(Silence(False))
-
-                        group.add_trigger_action(SwitchWaypoint(to_waypoint=4))
                         push_by_trigger.append(group)
 
-        push_trigger_zone = self.mission.triggers.add_triggerzone(player_cp.position, PUSH_TRIGGER_SIZE, name="Push zone")
+                        if not group.units[0].is_human():
+                            regroup_heading = self.conflict.to_cp.position.heading_between_point(player_cp.position)
+
+                            pos1 = group.position.point_from_heading(regroup_heading, REGROUP_ZONE_DISTANCE)
+                            pos2 = group.position.point_from_heading(regroup_heading, REGROUP_ZONE_DISTANCE+5000)
+                            w1 = group.add_waypoint(pos1, REGROUP_ALT)
+                            w2 = group.add_waypoint(pos2, REGROUP_ALT)
+
+                            group.points.remove(w1)
+                            group.points.remove(w2)
+
+                            group.points.insert(1, w2)
+                            group.points.insert(1, w1)
+
+                            w1.tasks.append(Silence(True))
+
+                            switch_waypoint_task = ControlledTask(SwitchWaypoint(from_waypoint=3, to_waypoint=2))
+                            switch_waypoint_task.start_if_user_flag(1, False)
+                            w2.tasks.append(switch_waypoint_task)
+                            group.points[3].tasks.append(Silence(False))
+
+                            group.add_trigger_action(SwitchWaypoint(to_waypoint=4))
+
         push_trigger = TriggerOnce(Event.NoEvent, "Push trigger")
 
         for group in push_by_trigger:
-            push_trigger.add_condition(AllOfGroupOutsideZone(group.id, push_trigger_zone.id))
-            push_trigger.add_action(AITaskPush(group.id, 1))
+            for unit in group.units:
+                push_trigger.add_condition(UnitAltitudeHigherAGL(unit.id, PUSH_TRIGGER_ACTIVATION_AGL))
 
-        message_string = self.mission.string("Task force is in the air, proceed with the objective (activate waypoint 3).")
+            if not group.units[0].is_human():
+                push_trigger.add_action(AITaskPush(group.id, 1))
+
+        message_string = self.mission.string("Task force is in the air, proceed with the objective.")
         push_trigger.add_action(MessageToAll(message_string, clearview=True))
         push_trigger.add_action(SetFlagValue())
 
@@ -127,9 +130,9 @@ class TriggersGenerator:
     def _set_skill(self, player_coalition: str, enemy_coalition: str):
         for coalition_name, coalition in self.mission.coalition.items():
             if coalition_name == player_coalition:
-                skill_level = self.game.settings.player_skill
+                skill_level = self.game.settings.player_skill, self.game.settings.player_skill
             elif coalition_name == enemy_coalition:
-                skill_level = self.game.settings.enemy_skill
+                skill_level = self.game.settings.enemy_skill, self.game.settings.enemy_vehicle_skill
             else:
                 continue
 
@@ -137,10 +140,10 @@ class TriggersGenerator:
                 for plane_group in country.plane_group:
                     for plane_unit in plane_group.units:
                         if plane_unit.skill != Skill.Client and plane_unit.skill != Skill.Player:
-                            plane_unit.skill = Skill(skill_level)
+                            plane_unit.skill = Skill(skill_level[0])
 
                 for vehicle_group in country.vehicle_group:
-                    vehicle_group.set_skill(Skill(skill_level))
+                    vehicle_group.set_skill(Skill(skill_level[1]))
 
     def generate(self, player_cp: ControlPoint, is_quick: bool, activation_trigger_radius: int, awacs_enabled: bool):
         player_coalition = self.game.player == "USA" and "blue" or "red"

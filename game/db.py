@@ -76,6 +76,7 @@ PRICES = {
     S_3B_Tanker: 13,
     IL_78M: 13,
     KC_135: 13,
+    KC130: 13,
 
     A_50: 8,
     E_3A: 8,
@@ -206,6 +207,7 @@ UNIT_BY_TASK = {
     Refueling: [
         IL_78M,
         KC_135,
+        KC130,
     ],
 
     AWACS: [E_3A, A_50, ],
@@ -336,6 +338,7 @@ UNIT_BY_COUNTRY = {
         AV8BNA,
 
         KC_135,
+        KC130,
         S_3B_Tanker,
         C_130,
         E_3A,
@@ -380,6 +383,10 @@ PLANE_PAYLOAD_OVERRIDES = {
         CAP: "AIM-120*4,AIM-9*2,AIM-7*2,Fuel",
     },
 
+    Su_25T: {
+        CAS: "APU-8 Vikhr-M*2,Kh-25ML,R-73*2,SPPU-22*2,Mercury LLTV Pod,MPS-410",
+    },
+
     Su_33: {
         CAP: "R-73*4,R-27R*2,R-27ER*6",
     },
@@ -404,6 +411,7 @@ PLANE_PAYLOAD_OVERRIDES = {
 
     M_2000C: {
         CAP: "Combat Air Patrol",
+        GroundAttack: "MK-82S Heavy Strike",
     },
 
     MiG_21Bis: {

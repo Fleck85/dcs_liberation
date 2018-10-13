@@ -11,7 +11,7 @@ class Window:
         self.tk = Tk()
         self.tk.title("DCS Liberation")
         self.tk.iconbitmap("icon.ico")
-        self.tk.resizable(True, True)
+        self.tk.resizable(False, False)
         self.tk.grid_columnconfigure(0, weight=1)
         self.tk.grid_rowconfigure(0, weight=1)
 
@@ -32,6 +32,10 @@ class Window:
         self.tk.focus()
 
     def clear_right_pane(self):
+        for i in range(100):
+            self.right_pane.grid_columnconfigure(1, weight=0)
+            self.right_pane.grid_rowconfigure(1, weight=0)
+
         for x in self.right_pane.winfo_children():
             x.grid_remove()
 

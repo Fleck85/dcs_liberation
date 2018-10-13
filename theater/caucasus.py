@@ -11,8 +11,8 @@ from .base import *
 class CaucasusTheater(ConflictTheater):
     terrain = caucasus.Caucasus()
     overview_image = "caumap.gif"
-    reference_points = {(-317948.32727306, 635639.37385346): (282.5, 319),
-                        (-355692.3067714, 617269.96285781): (269, 352), }
+    reference_points = {(-317948.32727306, 635639.37385346): (278.5, 319),
+                        (-355692.3067714, 617269.96285781): (263, 352), }
     landmap = load_landmap("resources\\caulandmap.p")
     daytime_map = {
         "dawn": (6, 9),
@@ -47,6 +47,9 @@ class CaucasusTheater(ConflictTheater):
     def __init__(self, load_ground_objects=True):
         super(CaucasusTheater, self).__init__()
 
+        self.soganlug.frontline_offset = 0.5
+        self.soganlug.base.strength = 1
+
         self.add_controlpoint(self.soganlug, connected_to=[self.kutaisi, self.beslan])
         self.add_controlpoint(self.beslan, connected_to=[self.soganlug, self.mozdok, self.nalchik])
         self.add_controlpoint(self.nalchik, connected_to=[self.beslan, self.mozdok, self.mineralnye])
@@ -72,10 +75,6 @@ class CaucasusTheater(ConflictTheater):
 
         self.carrier_1.captured = True
         self.soganlug.captured = True
-
-        if load_ground_objects:
-            with open("resources/cau_groundobjects.p", "rb") as f:
-                self.set_groundobject(pickle.load(f))
 
     def add_controlpoint(self, point: ControlPoint, connected_to: typing.Collection[ControlPoint] = []):
         point.name = " ".join(re.split(r"[ -]", point.name)[:1])
