@@ -5,6 +5,7 @@ from tkinter.ttk import *
 
 import pygame
 
+from game.db import SAM_RANGES, SAM_SHORT_NAMES
 from theater.theatergroundobject import CATEGORY_MAP
 from ui.styles import STYLES
 from ui.window import *
@@ -16,8 +17,8 @@ class OverviewCanvas:
     BRIGHT_RED = (200, 64, 64)
     BRIGHT_GREEN = (64, 200, 64)
 
-    RED = (255, 125, 125)
-    BLUE = (164, 164, 255)
+    RED = (225, 80, 80)
+    BLUE = (84, 84, 225)
     DARK_BLUE = (45, 62, 80)
     WHITE = (255, 255, 255)
     GREEN = (128, 186, 128)
@@ -52,6 +53,7 @@ class OverviewCanvas:
 
         # Map state
         self.redraw_required = True
+        self.redraw_sam_required = True
         self.zoom = 1
         self.scroll = [0, 0]
         self.exited = False
@@ -61,6 +63,7 @@ class OverviewCanvas:
         self.display_forces = BooleanVar(value=True)
         self.display_bases = BooleanVar(value=True)
         self.display_road = BooleanVar(value=True)
+        self.display_sam_ranges = BooleanVar(value=False)
         self.display_rules = self.compute_display_rules()
 
         parent.window.tk.protocol("<WM_DELETE_WINDOW>", self.on_close)
@@ -106,6 +109,14 @@ class OverviewCanvas:
         Label(self.options, text="Forces", **STYLES["widget"]).grid(row=0, column=col, sticky=W)
         Checkbutton(self.options, variable=self.display_forces, **STYLES["radiobutton"]).grid(row=0, column=col + 1,
                                                                                               sticky=E)
+
+        Separator(self.options, orient=VERTICAL).grid(row=0, column=col + 2, sticky=NS)
+        col += 3
+        Label(self.options, text="SAM range", **STYLES["widget"]).grid(row=0, column=col, sticky=W)
+        Checkbutton(self.options, variable=self.display_sam_ranges, **STYLES["radiobutton"]).grid(row=0,
+                                                                                                      column=col + 1,
+                                                                                                      sticky=E)
+
         Separator(self.options, orient=VERTICAL).grid(row=0, column=col + 2, sticky=NS)
         col += 4
         Label(self.options,
@@ -145,8 +156,8 @@ class OverviewCanvas:
 
         # Create surfaces for drawing
         self.surface = pygame.Surface((self.map.get_width(), self.map.get_height()))
-        self.surface.set_alpha(None)
         self.overlay = pygame.Surface((1066, 600), pygame.SRCALPHA)
+        self.sam_overlay = pygame.Surface((self.map.get_width(), self.map.get_height()), pygame.SRCALPHA)
 
         # Init pygame display
         pygame.display.init()
@@ -168,6 +179,7 @@ class OverviewCanvas:
             self.draw()
             i += 1
             if i == 300:
+                self.redraw_sam_required = True
                 self.frontline_vector_cache = {}
                 i = 0
         print("Stopped SDL app")
@@ -175,7 +187,6 @@ class OverviewCanvas:
     def draw(self):
 
         try:
-            #self.parent.window.tk.winfo_ismapped()
             self.embed.winfo_ismapped()
             self.embed.winfo_manager()
         except:
@@ -308,17 +319,18 @@ class OverviewCanvas:
 
                         pygame.draw.line(surface, color, start_coords, end_coords, 4)
 
-        if self.display_bases.get():
-            for cp in self.game.theater.controlpoints:
-                coords = self.transform_point(cp.position)
-                radius = 12 * math.pow(cp.importance, 1)
-                radius_m = radius * cp.base.strength - 2
 
-                if cp.captured:
-                    color = self._player_color()
-                else:
-                    color = self._enemy_color()
+        for cp in self.game.theater.controlpoints:
+            coords = self.transform_point(cp.position)
+            radius = 12 * math.pow(cp.importance, 1)
+            radius_m = radius * cp.base.strength - 2
 
+            if cp.captured:
+                color = self._player_color()
+            else:
+                color = self._enemy_color()
+
+            if self.display_bases.get():
                 pygame.draw.circle(surface, self.BLACK, (int(coords[0]), int(coords[1])), int(radius))
                 pygame.draw.circle(surface, color, (int(coords[0]), int(coords[1])), int(radius_m))
 
@@ -337,14 +349,36 @@ class OverviewCanvas:
                         surface.blit(labelHover, (coords[0] - label.get_width() / 2 + 1, coords[1] + 1))
 
                     self.draw_base_info(overlay, cp, (0, 0))
-
                 else:
                     surface.blit(label, (coords[0] - label.get_width() / 2 + 1, coords[1] + 1))
 
-                if self.display_forces.get():
-                    units_title = " {} / {} / {} ".format(cp.base.total_planes, cp.base.total_armor, cp.base.total_aa)
-                    label2 = self.fontsmall.render(units_title, self.ANTIALIASING, color, (30, 30, 30))
-                    surface.blit(label2, (coords[0] - label2.get_width() / 2, coords[1] + label.get_height() + 1))
+            if self.display_forces.get():
+                units_title = " {} / {} / {} ".format(cp.base.total_planes, cp.base.total_armor, cp.base.total_aa)
+                label2 = self.fontsmall.render(units_title, self.ANTIALIASING, color, (30, 30, 30))
+                surface.blit(label2, (coords[0] - label2.get_width() / 2, coords[1] + self.font.get_height() + 1))
+
+            if self.redraw_sam_required:
+                max = 0
+                sam = ""
+                for key in cp.base.aa.keys():
+                    v = SAM_RANGES[key]
+                    if(v>0):
+                        max = v
+                        sam = SAM_SHORT_NAMES[key]
+                radius = max
+                radius = radius*10
+                txt = self.font.render(" " + sam + " ",self.ANTIALIASING, self.WHITE, color)
+                if radius > 0:
+                    c = pygame.Color(*color)
+                    c.a = 100
+                    pygame.draw.circle(self.sam_overlay, c, (int(coords[0]), int(coords[1])), int(radius))
+                    pygame.draw.circle(self.sam_overlay, color, (int(coords[0]), int(coords[1])), int(radius),1)
+                    self.sam_overlay.blit(txt, (coords[0]-txt.get_width()/2, coords[1]-txt.get_height()/2))
+
+
+        if self.display_sam_ranges.get():
+            self.surface.blit(self.sam_overlay, (0,0))
+        self.redraw_sam_required = False
 
     def draw_base_info(self, surface: pygame.Surface, controlPoint: ControlPoint, pos):
         title = self.font.render(controlPoint.name, self.ANTIALIASING, self.BLACK, self.GREEN)
@@ -446,7 +480,7 @@ class OverviewCanvas:
         self.draw()
 
     def compute_display_rules(self):
-        return sum([1 if a.get() else 0 for a in [self.display_forces, self.display_road, self.display_bases, self.display_ground_targets]])
+        return sum([1 if a.get() else 0 for a in [self.display_forces, self.display_road, self.display_bases, self.display_ground_targets, self.display_sam_ranges]])
 
     def display(self, cp: ControlPoint):
         def action(_):

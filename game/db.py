@@ -221,6 +221,88 @@ UNIT_BY_TASK = {
     CargoTransportation: [Dry_cargo_ship_Ivanov, Bulk_cargo_ship_Yakushev, Tanker_Elnya_160, Armed_speedboat, ],
 }
 
+
+"""
+Max Range for Air Defense Units, used to generate preview of SAM coverage in the map
+"""
+SAM_RANGES = {
+    AirDefence.AAA_Vulcan_M163: 3,
+    AirDefence.SAM_Linebacker_M6: 4.5,
+    AirDefence.SPAAA_ZSU_23_4_Shilka: 2.5,
+    AirDefence.SAM_SA_9_Strela_1_9P31: 8,
+    AirDefence.SAM_SA_8_Osa_9A33: 12,
+    AirDefence.SAM_SA_19_Tunguska_2S6: 10
+}
+
+
+"""
+Sam Short name to display on map
+"""
+SAM_SHORT_NAMES = {
+    AirDefence.SAM_SA_19_Tunguska_2S6: "SA-19",
+    AirDefence.SAM_SA_6_Kub_LN_2P25: "SA-6",
+    AirDefence.SAM_SA_3_S_125_LN_5P73: "SA-3",
+    AirDefence.SAM_SA_10_S_300PS_LN_5P85C: "SA-10",
+    AirDefence.SAM_SA_10_S_300PS_LN_5P85D: "SA-10",
+    AirDefence.SAM_SA_11_Buk_LN_9A310M1: "SA-11",
+    AirDefence.SAM_SA_8_Osa_9A33: "SA-8",
+    AirDefence.SAM_SA_15_Tor_9A331: "SA-15",
+    AirDefence.SAM_SA_13_Strela_10M3_9A35M3: "SA-13",
+    AirDefence.SAM_SA_9_Strela_1_9P31: "SA-9",
+    AirDefence.SAM_SA_11_Buk_CC_9S470M1: "SA-11",
+    AirDefence.SAM_SA_8_Osa_LD_9T217: "SA-8",
+    AirDefence.SAM_Patriot_AMG_AN_MRC_137: "PATR",
+    AirDefence.SAM_Patriot_ECS_AN_MSQ_104: "PATR",
+    AirDefence.SPAAA_Gepard: "AA",
+    AirDefence.SAM_Hawk_PCP: "HWK",
+    AirDefence.AAA_Vulcan_M163: "AA",
+    AirDefence.SAM_Hawk_LN_M192: "HWK",
+    AirDefence.SAM_Chaparral_M48: "M48",
+    AirDefence.SAM_Linebacker_M6: "M6",
+    AirDefence.SAM_Patriot_LN_M901: "PATR",
+    AirDefence.SAM_Avenger_M1097: "AVNG",
+    AirDefence.SAM_Patriot_EPP_III: "PATR",
+    AirDefence.SAM_Patriot_ICC: "PATR",
+    AirDefence.SAM_Roland_ADS: "RLD",
+    AirDefence.SAM_SA_10_S_300PS_CP_54K6: "SA-10",
+    AirDefence.Stinger_MANPADS: "FIM-92",
+    AirDefence.SAM_Stinger_comm_dsr: "FIM-92",
+    AirDefence.SAM_Stinger_comm: "FIM-92",
+    AirDefence.SPAAA_ZSU_23_4_Shilka: "AA",
+    AirDefence.AAA_ZU_23_Closed: "AA",
+    AirDefence.AAA_ZU_23_Emplacement: "AA",
+    AirDefence.AAA_ZU_23_on_Ural_375: "AA",
+    AirDefence.AAA_ZU_23_Insurgent_Closed: "AA",
+    AirDefence.AAA_ZU_23_Insurgent_on_Ural_375: "AA",
+    AirDefence.AAA_ZU_23_Insurgent: "AA",
+    AirDefence.SAM_SA_18_Igla_MANPADS: "SA-18",
+    AirDefence.SAM_SA_18_Igla_comm: "SA-18",
+    AirDefence.SAM_SA_18_Igla_S_MANPADS: "SA-18",
+    AirDefence.SAM_SA_18_Igla_S_comm: "SA-18",
+    AirDefence.EWR_1L13: "EWR",
+    AirDefence.SAM_SA_6_Kub_STR_9S91: "SA-6",
+    AirDefence.SAM_SA_10_S_300PS_TR_30N6: "SA-10",
+    AirDefence.SAM_SA_10_S_300PS_SR_5N66M: "SA-10",
+    AirDefence.EWR_55G6: "EWR",
+    AirDefence.SAM_SA_10_S_300PS_SR_64H6E: "SA-10",
+    AirDefence.SAM_SA_11_Buk_SR_9S18M1: "SA-11",
+    AirDefence.CP_9S80M1_Sborka: "9S80",
+    AirDefence.SAM_Hawk_TR_AN_MPQ_46: "HWK",
+    AirDefence.SAM_Hawk_SR_AN_MPQ_50: "HWK",
+    AirDefence.SAM_Patriot_STR_AN_MPQ_53: "PATR",
+    AirDefence.SAM_Hawk_CWAR_AN_MPQ_55: "HWK",
+    AirDefence.SAM_SA_3_S_125_SR_P_19: "SA-3",
+    AirDefence.SAM_Roland_EWR: "RLD",
+    AirDefence.SAM_SA_3_S_125_TR_SNR: "SA-3",
+    AirDefence.AAA_Flak_18: "AA",
+    AirDefence.AAA_Flak_30: "AA",
+    AirDefence.AAA_Flak_36: "AA",
+    AirDefence.AAA_Flak_37: "AA",
+    AirDefence.AAA_Flak_Vierling_38: "AA",
+    AirDefence.AAA_Kdo_G_40: "AA",
+    AirDefence.AAA_Bofors_40mm: "AA"
+}
+
 """
 Units from AirDefense category of UNIT_BY_TASK that will be removed from use if "No SAM" option is checked at the start of the game
 """
@@ -230,6 +312,8 @@ SAM_BAN = [
     AirDefence.SAM_SA_9_Strela_1_9P31,
     AirDefence.SAM_SA_8_Osa_9A33,
 ]
+
+
 
 """
 Units that will always be spawned in the air
