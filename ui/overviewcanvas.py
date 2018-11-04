@@ -7,27 +7,13 @@ import pygame
 
 from theater.theatergroundobject import CATEGORY_MAP
 from ui.styles import STYLES
+import ui.styles as styles
 from ui.window import *
 
 
 class OverviewCanvas:
+
     mainmenu = None  # type: ui.mainmenu.MainMenu
-
-    BRIGHT_RED = (200, 64, 64)
-    BRIGHT_GREEN = (64, 200, 64)
-
-    RED = (255, 125, 125)
-    BLUE = (164, 164, 255)
-    DARK_BLUE = (45, 62, 80)
-    WHITE = (255, 255, 255)
-    GREEN = (128, 186, 128)
-    BLACK = (0, 0, 0)
-    BACKGROUND = pygame.Color(0, 64, 64)
-    ANTIALIASING = True
-
-    WIDTH = 1066
-    HEIGHT = 600
-
     started = None
 
     def __init__(self, frame: Frame, parent, game: Game):
@@ -42,13 +28,14 @@ class OverviewCanvas:
         self.map = None
         self.screen = None
         self.surface: pygame.Surface = None
+        self.background: pygame.Color = None
+        self.overlay: pygame.Surface = None
         self.thread: Thread = None
         self.clock = pygame.time.Clock()
         self.expanded = True
-
         pygame.font.init()
-        self.font:pygame.font.SysFont = pygame.font.SysFont("arial", 15)
-        self.fontsmall:pygame.font.SysFont = pygame.font.SysFont("arial", 10)
+        self.font: pygame.font.SysFont = pygame.font.SysFont("arial", 15)
+        self.fontsmall: pygame.font.SysFont = pygame.font.SysFont("arial", 10)
         self.icons = {}
 
         # Frontline are too heavy on performance to compute in realtime, so keep them in a cache
@@ -73,7 +60,7 @@ class OverviewCanvas:
         self.wrapper.grid(column=0, row=0, sticky=NSEW)  # Adds grid
         self.wrapper.pack(side=LEFT)  # packs window to the left
 
-        self.embed = Frame(self.wrapper, width=self.WIDTH, height=self.HEIGHT, borderwidth=2, **STYLES["frame-wrapper"])
+        self.embed = Frame(self.wrapper, width=styles.MAP_WIDTH, height=styles.MAP_HEIGHT, borderwidth=2, **STYLES["frame-wrapper"])
         self.embed.grid(column=0, row=0, sticky=NSEW)  # Adds grid
 
         self.options = Frame(self.wrapper, borderwidth=2, **STYLES["frame-wrapper"])
@@ -84,11 +71,6 @@ class OverviewCanvas:
         self.init_sdl_thread()
 
     def build_map_options_panel(self):
-
-        def force_redraw():
-            if self.screen:
-                self.redraw_required = True
-                self.draw()
 
         col = 0
         Label(self.options, text="Bases", **STYLES["widget"]).grid(row=0, column=col, sticky=W)
@@ -112,7 +94,8 @@ class OverviewCanvas:
                                                                                               sticky=E)
         Separator(self.options, orient=VERTICAL).grid(row=0, column=col + 2, sticky=NS)
         col += 4
-        Button(self.options, text="Toggle size", command=lambda: self.map_size_toggle(), **STYLES["btn-primary"]).grid(row=0, column=col, sticky=E, padx=(10,10))
+        Button(self.options, text="Toggle size", command=lambda: self.map_size_toggle(), **STYLES["btn-primary"])\
+            .grid(row=0, column=col, sticky=E, padx=(10,10))
 
     def map_size_toggle(self):
         if self.expanded:
@@ -120,8 +103,8 @@ class OverviewCanvas:
             self.options.configure(width=0)
             self.expanded = False
         else:
-            self.embed.configure(width=self.WIDTH)
-            self.options.configure(width=self.WIDTH)
+            self.embed.configure(width=styles.MAP_WIDTH)
+            self.options.configure(width=styles.MAP_WIDTH)
             self.expanded = True
 
     def on_close(self):
@@ -137,8 +120,8 @@ class OverviewCanvas:
             os.environ['SDL_VIDEODRIVER'] = 'windib'
 
         # Create pygame 'screen'
-        self.screen = pygame.display.set_mode((self.WIDTH, self.HEIGHT), pygame.DOUBLEBUF | pygame.HWSURFACE)
-        self.screen.fill(pygame.Color(*self.BLACK))
+        self.screen = pygame.display.set_mode((styles.MAP_WIDTH, styles.MAP_HEIGHT), pygame.DOUBLEBUF | pygame.HWSURFACE)
+        self.screen.fill(pygame.Color(*styles.PYG_BLACK))
 
         # Load icons resources
         self.icons = {}
@@ -152,13 +135,14 @@ class OverviewCanvas:
 
         # Load the map image
         self.map = pygame.image.load(os.path.join("resources", self.game.theater.overview_image)).convert()
-        pygame.draw.rect(self.map, self.BLACK, (0, 0, self.map.get_width(), self.map.get_height()), 10)
-        pygame.draw.rect(self.map, self.WHITE, (0, 0, self.map.get_width(), self.map.get_height()), 5)
+        pygame.draw.rect(self.map, styles.PYG_BLACK, (0, 0, self.map.get_width(), self.map.get_height()), 10)
+        pygame.draw.rect(self.map, styles.PYG_WHITE, (0, 0, self.map.get_width(), self.map.get_height()), 5)
 
         # Create surfaces for drawing
         self.surface = pygame.Surface((self.map.get_width(), self.map.get_height()))
         self.surface.set_alpha(None)
-        self.overlay = pygame.Surface((self.WIDTH, self.HEIGHT), pygame.SRCALPHA)
+        self.overlay = pygame.Surface((styles.MAP_WIDTH, styles.MAP_HEIGHT), pygame.SRCALPHA)
+        self.background = pygame.Color(*styles.PYG_BACKGROUND)
 
         # Init pygame display
         pygame.display.init()
@@ -177,7 +161,10 @@ class OverviewCanvas:
         i = 0
         while not self.exited:
             self.clock.tick(60)
-            self.draw()
+            try:
+                self.draw()
+            except Exception as e:
+                print(e)
             i += 1
             if i == 300:
                 self.frontline_vector_cache = {}
@@ -236,7 +223,7 @@ class OverviewCanvas:
         if self.redraw_required:
 
             # Fill
-            self.screen.fill(self.BACKGROUND)
+            self.screen.fill(self.background)
             self.overlay.fill(pygame.Color(0, 0, 0, 0))
 
             # Surface
@@ -261,7 +248,7 @@ class OverviewCanvas:
         self.surface.blit(self.map, (0, 0))
 
         # Display zoom level on overlay
-        zoom_lvl = self.font.render("  x " + str(self.zoom) + "  ", self.ANTIALIASING, self.WHITE, self.DARK_BLUE)
+        zoom_lvl = self.font.render("  x " + str(self.zoom) + "  ", styles.PYG_AA, styles.PYG_WHITE, styles.PYG_DARK_BLUE)
         self.overlay.blit(zoom_lvl, (self.overlay.get_width()-zoom_lvl.get_width()-5,
                                      self.overlay.get_height()-zoom_lvl.get_height()-5))
 
@@ -291,7 +278,7 @@ class OverviewCanvas:
                     elif connected_cp.captured and cp.captured:
                         color = self._player_color()
                     else:
-                        color = self.BLACK
+                        color = styles.PYG_BLACK
 
                     pygame.draw.line(surface, color, coords, connected_coords, 2)
 
@@ -331,22 +318,22 @@ class OverviewCanvas:
                 else:
                     color = self._enemy_color()
 
-                pygame.draw.circle(surface, self.BLACK, (int(coords[0]), int(coords[1])), int(radius))
+                pygame.draw.circle(surface, styles.PYG_BLACK, (int(coords[0]), int(coords[1])), int(radius))
                 pygame.draw.circle(surface, color, (int(coords[0]), int(coords[1])), int(radius_m))
 
-                label = self.font.render(cp.name, self.ANTIALIASING, (225, 225, 225), self.BLACK)
-                labelHover = self.font.render(cp.name, self.ANTIALIASING, (255, 255, 255), (128, 186, 128))
-                labelClick = self.font.render(cp.name, self.ANTIALIASING, (255, 255, 255), (122, 122, 255))
+                label = self.font.render(cp.name, styles.PYG_AA, (225, 225, 225), styles.PYG_BLACK)
+                label_hover = self.font.render(cp.name, styles.PYG_AA, (255, 255, 255), (128, 186, 128))
+                label_click = self.font.render(cp.name, styles.PYG_AA, (255, 255, 255), (122, 122, 255))
 
                 rect = pygame.Rect(coords[0] - label.get_width() / 2 + 1, coords[1] + 1, label.get_width(),
                                    label.get_height())
 
                 if rect.collidepoint(mouse_pos):
                     if (mouse_down[0]):
-                        surface.blit(labelClick, (coords[0] - label.get_width() / 2 + 1, coords[1] + 1))
+                        surface.blit(label_click, (coords[0] - label.get_width() / 2 + 1, coords[1] + 1))
                         self.parent.go_cp(cp)
                     else:
-                        surface.blit(labelHover, (coords[0] - label.get_width() / 2 + 1, coords[1] + 1))
+                        surface.blit(label_hover, (coords[0] - label.get_width() / 2 + 1, coords[1] + 1))
 
                     self.draw_base_info(overlay, cp, (0, 0))
 
@@ -355,48 +342,48 @@ class OverviewCanvas:
 
                 if self.display_forces.get():
                     units_title = " {} / {} / {} ".format(cp.base.total_planes, cp.base.total_armor, cp.base.total_aa)
-                    label2 = self.fontsmall.render(units_title, self.ANTIALIASING, color, (30, 30, 30))
+                    label2 = self.fontsmall.render(units_title, styles.PYG_AA, color, (30, 30, 30))
                     surface.blit(label2, (coords[0] - label2.get_width() / 2, coords[1] + label.get_height() + 1))
 
-    def draw_base_info(self, surface: pygame.Surface, controlPoint: ControlPoint, pos):
-        title = self.font.render(controlPoint.name, self.ANTIALIASING, self.BLACK, self.GREEN)
-        hp = self.font.render("Strength : ", self.ANTIALIASING, (225, 225, 225), self.BLACK)
+    def draw_base_info(self, surface: pygame.Surface, cp: ControlPoint, pos):
+        title = self.font.render(cp.name, styles.PYG_AA, styles.PYG_BLACK, styles.PYG_GREEN)
+        hp = self.font.render("Strength : ", styles.PYG_AA, (225, 225, 225), styles.PYG_BLACK)
 
         armor_txt = "ARMOR      >    "
-        for key, value in controlPoint.base.armor.items():
+        for key, value in cp.base.armor.items():
             armor_txt += key.id + " x " + str(value) + " | "
-        armor = self.font.render(armor_txt, self.ANTIALIASING, (225, 225, 225), self.BLACK)
+        armor = self.font.render(armor_txt, styles.PYG_AA, (225, 225, 225), styles.PYG_BLACK)
 
         aircraft_txt = "AIRCRAFT >    "
-        for key, value in controlPoint.base.aircraft.items():
+        for key, value in cp.base.aircraft.items():
             aircraft_txt += key.id + " x " + str(value) + " | "
-        aircraft = self.font.render(aircraft_txt, self.ANTIALIASING, (225, 225, 225), self.BLACK)
+        aircraft = self.font.render(aircraft_txt, styles.PYG_AA, (225, 225, 225), styles.PYG_BLACK)
 
         aa_txt = "AA/SAM       >    "
-        for key, value in controlPoint.base.aa.items():
+        for key, value in cp.base.aa.items():
             aa_txt += key.id + " x " + str(value) + " | "
-        aa = self.font.render(aa_txt, self.ANTIALIASING, (225, 225, 225), self.BLACK)
+        aa = self.font.render(aa_txt, styles.PYG_AA, (225, 225, 225), styles.PYG_BLACK)
 
         lineheight = title.get_height()
         w = max([max([a.get_width() for a in [title, armor, aircraft, aa]]), 150])
         h = 5 * lineheight + 4 * 5
 
         # Draw frame
-        pygame.draw.rect(surface, self.GREEN, (pos[0], pos[1], w + 8, h + 8))
-        pygame.draw.rect(surface, self.BLACK, (pos[0] + 2, pos[1] + 2, w + 4, h + 4))
-        pygame.draw.rect(surface, self.GREEN, (pos[0] + 2, pos[1], w + 4, lineheight + 4))
+        pygame.draw.rect(surface, styles.PYG_GREEN, (pos[0], pos[1], w + 8, h + 8))
+        pygame.draw.rect(surface, styles.PYG_BLACK, (pos[0] + 2, pos[1] + 2, w + 4, h + 4))
+        pygame.draw.rect(surface, styles.PYG_GREEN, (pos[0] + 2, pos[1], w + 4, lineheight + 4))
 
         # Title
         surface.blit(title, (pos[0] + 4, 4 + pos[1]))
         surface.blit(hp, (pos[0] + 4, 4 + pos[1] + lineheight + 5))
 
         # Draw gauge
-        pygame.draw.rect(surface, self.WHITE,
+        pygame.draw.rect(surface, styles.PYG_WHITE,
                          (pos[0] + hp.get_width() + 3, 4 + pos[1] + lineheight + 5, 54, lineheight))
-        pygame.draw.rect(surface, self.BRIGHT_RED,
+        pygame.draw.rect(surface, styles.PYG_BRIGHT_RED,
                          (pos[0] + hp.get_width() + 5, 4 + pos[1] + lineheight + 5 + 2, 50, lineheight - 4))
-        pygame.draw.rect(surface, self.BRIGHT_GREEN, (
-        pos[0] + hp.get_width() + 5, 4 + pos[1] + lineheight + 5 + 2, 50 * controlPoint.base.strength, lineheight - 4))
+        pygame.draw.rect(surface, styles.PYG_BRIGHT_GREEN, (
+        pos[0] + hp.get_width() + 5, 4 + pos[1] + lineheight + 5 + 2, 50 * cp.base.strength, lineheight - 4))
 
         # Text
         surface.blit(armor, (pos[0] + 4, 4 + pos[1] + lineheight * 2 + 10))
@@ -420,7 +407,7 @@ class OverviewCanvas:
             self.draw_ground_object_info(ground_object, (x, y), color, surface)
 
     def draw_ground_object_info(self, ground_object: TheaterGroundObject, pos, color, surface: pygame.Surface):
-        lb = self.font.render(str(ground_object), self.ANTIALIASING, color, self.BLACK)
+        lb = self.font.render(str(ground_object), styles.PYG_AA, color, styles.PYG_BLACK)
         surface.blit(lb, (pos[0] + 18, pos[1]))
 
     def transform_point(self, p: Point, treshold=30) -> (int, int):
@@ -449,10 +436,10 @@ class OverviewCanvas:
         return X > treshold and X or treshold, Y > treshold and Y or treshold
 
     def _player_color(self):
-        return self.game.player == "USA" and self.BLUE or self.RED
+        return self.game.player == "USA" and styles.PYG_BLUE or styles.PYG_RED
 
     def _enemy_color(self):
-        return self.game.player == "USA" and self.RED or self.BLUE
+        return self.game.player == "USA" and styles.PYG_RED or styles.PYG_BLUE
 
     def update(self):
         self.draw()

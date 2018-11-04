@@ -47,3 +47,24 @@ STYLES["subheader"] = {"bg": BG_SUBTITLE_COLOR}
 STYLES["btn-primary"] = {"bg": GREEN, "fg": FG_COLOR, "padx": PADDING_X, "pady": 2, "font": DEFAULT_FONT}
 STYLES["btn-danger"] = {"bg": RED, "fg": FG_COLOR, "padx": PADDING_X, "pady": 2, "font": DEFAULT_FONT}
 STYLES["btn-warning"] = {"bg": YELLOW, "fg": FG_COLOR, "padx": PADDING_X, "pady": 2, "font": DEFAULT_FONT}
+
+
+# Style for MAP overview (Pygame)
+PYG_AA = True
+
+PYG_BRIGHT_RED = (200, 64, 64)
+PYG_BRIGHT_GREEN = (64, 200, 64)
+
+PYG_RED = (255, 125, 125)
+PYG_BLUE = (164, 164, 255)
+PYG_DARK_BLUE = (45, 62, 80)
+PYG_WHITE = (255, 255, 255)
+PYG_GREEN = (128, 186, 128)
+PYG_BLACK = (0, 0, 0)
+PYG_BACKGROUND = (0, 64, 64)
+
+MAP_WIDTH = 1066
+MAP_HEIGHT = 600
+
+
+
